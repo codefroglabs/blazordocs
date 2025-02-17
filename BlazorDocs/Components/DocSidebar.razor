@@ -1,0 +1,82 @@
+@inject NavigationManager NavManager
+@inject IMarkdownDocService DocService
+
+<nav class="p-4 bg-sidebar border-r-1 border-r-sidebar h-auto md:h-screen w-full md:w-64 overflow-y-auto">
+    @if (_root != null)
+    {
+        @RenderNode(_root, isRoot: true, currentSlug: currentSlug)
+    }
+</nav>
+
+@code {
+    private DocNode? _root;
+    private string currentSlug = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _root = await DocService.GetDocTreeAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        
+        var newSlug = GetCurrentSlugFromUri();
+        if (newSlug != currentSlug)
+        {
+            currentSlug = newSlug;
+            StateHasChanged();
+        }
+    }
+
+    private string GetCurrentSlugFromUri()
+    {
+        var uri = NavManager.ToBaseRelativePath(NavManager.Uri);
+        if (!uri.StartsWith("docs", StringComparison.OrdinalIgnoreCase))
+            return "";
+
+        var afterDocs = uri.Substring(4).TrimStart('/');
+        return afterDocs;
+    }
+
+    private RenderFragment RenderNode(DocNode node, bool isRoot, string currentSlug) => __builder =>
+    {
+        if (!isRoot)
+        {
+            if (node.Doc != null)
+            {
+                bool isActive = node.Doc.Slug.Equals(currentSlug, StringComparison.OrdinalIgnoreCase);
+
+                <div class="mb-1">
+                    <a class="@BuildLinkClass(isActive)"
+                       href="@($"/docs/{node.Doc.Slug}")">
+                        @node.Doc.Title
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="mb-1 font-semibold uppercase text-sidebar-foreground">@node.Segment</div>
+            }
+        }
+
+        if (node.Children.Any())
+        {
+            <ul class="pl-4">
+                @foreach (var child in node.Children)
+                {
+                    <li>
+                        @RenderNode(child, false, currentSlug)
+                    </li>
+                }
+            </ul>
+        }
+    };
+
+    private string BuildLinkClass(bool isActive)
+    {
+        return isActive
+            ? "text-sidebar-foreground font-bold text-sm"
+            : "text-sidebar-foreground hover:underline text-sm";
+    }
+}

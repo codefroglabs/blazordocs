@@ -1,0 +1,63 @@
+@inject IMarkdownDocService DocService
+
+<!-- Mobile-only top bar -->
+<div class="flex items-center justify-between bg-sidebar px-4 py-2 md:hidden">
+    <a href="/" class="font-bold text-lg text-sidebar-foreground" id="quepasa-logo">BlazorDocs</a>
+
+    <!-- This label toggles the hidden checkbox below -->
+    <label for="sidebarToggle" class="cursor-pointer text-sidebar-foreground">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </label>
+</div>
+
+<div class="flex flex-col md:flex-row min-h-screen">
+
+    <!-- Hidden checkbox that stores “open/close” for the sidebar -->
+    <input type="checkbox" id="sidebarToggle" class="peer hidden" />
+    <div class="
+        sidebar-panel
+        fixed top-0 left-0 w-64 h-full
+        bg-sidebar border-r-2 border-sidebar border-opacity-50
+        transform -translate-x-full transition-transform duration-300
+        peer-checked:translate-x-0
+        md:static md:translate-x-0 md:transform-none md:transition-none">
+        <div class="hidden md:block pt-4 px-8">
+            <a href="/" class="font-bold text-lg text-sidebar-foreground">BlazorDocs</a>
+        </div>
+        <DocSidebar />
+    </div>
+
+    <main class="flex-1 p-4 md:px-16 lg:px-32 pt-4 mb-16 overflow-y-auto">
+        @if (docItem == null)
+        {
+            <h1 class="text-3xl md:text-5xl text-foreground">404 - Not Found</h1>
+            <p>Sorry, we couldn't find the document you were looking for.</p>
+            <p>Check the URL and try again.</p>
+        }
+        else
+        {
+            <h1 class="text-2xl md:text-4xl text-foreground font-bold">@docItem.Title</h1>
+            <div class="prose py-4 md:py-8">@((MarkupString)htmlContent)</div>
+        }
+    </main>
+</div>
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+    private string htmlContent = "";
+    private DocItem? docItem;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Slug ??= "";
+        
+        docItem = await DocService.GetDocBySlugAsync(Slug);
+        if (docItem != null)
+        {
+            htmlContent = docItem.HtmlContent;
+        }
+    }
+}

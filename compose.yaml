@@ -1,0 +1,6 @@
+﻿services:
+  blazordocs.website:
+    image: blazordocs.website
+    build:
+      context: .
+      dockerfile: BlazorDocs.Website/Dockerfile

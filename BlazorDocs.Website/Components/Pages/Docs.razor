@@ -1,0 +1,8 @@
+@page "/docs/{**slug}"
+@using BlazorDocs.Components
+
+<DocumentationPage Slug="@Slug"/>
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+}
